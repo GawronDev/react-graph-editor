@@ -17,7 +17,7 @@ export default function Sidebar(props) {
                 <div className="sidebar">
                     <h2 className="sidebar-title">Topological sorting</h2>
                     <h4 className="sidebar-header">Tools</h4>
-                    <span className="sidebar-item"><BsNodePlus className="react-icon" />Add new node</span>
+                    <span className="sidebar-item" onClick={props.new_node}><BsNodePlus className="react-icon" />Add new node</span>
                     <span className="sidebar-item"><BsFillPlayFill className="react-icon" />Start algorithm</span>
                     <span className="sidebar-item"><MdOutlineRemoveCircleOutline className="react-icon"/>Remove node</span>
                     <span className="sidebar-item"><MdRestartAlt className="react-icon" />Reset canvas</span>
@@ -41,7 +41,7 @@ export default function Sidebar(props) {
             <div className="sidebar-wrapper-closed">
                 <div className="sidebar-closed">
                     <h2 className="sidebar-title-closed">TS</h2>
-                    <span className="sidebar-item-closed"><BsNodePlus className="react-icon" /></span>
+                    <span className="sidebar-item-closed" onClick={props.new_node}><BsNodePlus className="react-icon" /></span>
                     <span className="sidebar-item-closed"><BsFillPlayFill className="react-icon" /></span>
                     <span className="sidebar-item-closed"><MdOutlineRemoveCircleOutline className="react-icon"/></span>
                     <span className="sidebar-item-closed"><MdRestartAlt className="react-icon" /></span>
