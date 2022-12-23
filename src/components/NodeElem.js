@@ -3,6 +3,7 @@ import Xarrow, {useXarrow, Xwrapper} from "react-xarrows";
 import Draggable from "react-draggable";
 
 export default function NodeElem(props) {
+    const [connected, setConnected] = useState(props.connected);
     const [name, setName] = useState(props.name);
     const [parents, setParents] = useState(props.parents);
     const [children, setChildren] = useState(props.children);
@@ -10,18 +11,14 @@ export default function NodeElem(props) {
     const updateXarrow = useXarrow();
 
     function dragResponse() {
+        updateXarrow();
         setDragging(true);
     }
 
     function stopResponse() {
+        updateXarrow();
         if(!dragging){
-            if(props.connectMode == true){
-                console.log(name, props.connectMode);
-                props.changeConnectMode();
-            } else {
-                console.log(name, props.connectMode);
-                props.changeConnectMode();
-            }
+            
         }
         setDragging(false);
     }
