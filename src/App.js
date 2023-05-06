@@ -4,7 +4,7 @@ import ConnectDialog from "./components/ConnectDialog";
 import NodeElem from "./components/NodeElem";
 import Main from "./components/Main";
 import { nanoid } from "nanoid";
-import Xarrow, { useXarrow, Xwrapper } from "react-xarrows";
+import Xarrow from "react-xarrows";
 
 // Alphabeth for node names
 var alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"];
@@ -15,38 +15,50 @@ function resetAlphabet() {
     alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"];
 }
 
+// Relations - a graph stored as adjency list
 var relations = {};
 
+
 export default function App() {
-    // console.log("App reseted");
+    const [displayResult, setDisplayResult] = useState(false);
     const [openDialog, setOpenDialog] = useState(false);
     const [nodes, setNodes] = useState([]);
+    const [sorted, setSorted] = useState([]);
 
+    // Clear the graph
     function clearNodes() {
         relations = [];
         setNodes([]);
+        setSorted([]);
+        setDisplayResult(false);
         resetAlphabet();
     }
 
+    // Open the dialog window for connecting nodes
     function openConnectDialog() {
         setOpenDialog(prev => !prev);
     }
 
     function connectNodes(parent, child) {
         for (var key in relations) {
+            console.log(key);
             if (key == parent) {
                 console.log("1");
+
                 if (relations[key].includes(child)) {
+                    // If the node is already connected, do not duplicate
                     console.log("Tried to duplicate a connection");
                 } else {
+                    // Connect two nodes but dont overwrite previous connections
                     var current_connections = relations[parent];
                     current_connections.push(child);
                     relations[parent] = current_connections;
                     console.log(relations);
+                    // Return the new connection as an arrow object
                     setNodes((prev) => {
                         return [
                             ...prev,
-                            <Xarrow id="arrow" start={parent} end={child} color={"black"} headSize={3} curveness={0.8} />
+                            <Xarrow id="arrow" start={parent} end={child} color={"black"} headSize={3} curveness={0.8} animateDrawing={true} />
                         ];
                     })
                 }
@@ -54,14 +66,9 @@ export default function App() {
         }
     }
 
-    function getNode(node_name) {
-        for (let i = 0; i < nodes.length; i++) {
-            if (nodes[i].props.name == node_name) {
-                return nodes[i];
-            }
-        }
-    }
+    
 
+    // Add new node
     function addNode() {
         setNodes((prev) => {
             if (alphabet.length > 0) {
@@ -71,7 +78,7 @@ export default function App() {
                 relations[name] = [];
                 return [
                     ...prev,
-                    <NodeElem name={name} key={id} id={name} parents={[]} children={[]} connected={false} />
+                    <NodeElem name={name} key={id} id={name}/>
                 ]
             } else {
                 nodeNum++;
@@ -79,27 +86,79 @@ export default function App() {
                 relations[nodeNum] = [];
                 return [
                     ...prev,
-                    <NodeElem name={nodeNum} key={id} id={name} parents={[]} children={[]} connected={false} />
+                    <NodeElem name={nodeNum} key={id} id={name} />
                 ]
             }
         });
     }
 
-    function prepopulateGraph(){
-        console.log("Populating graph");
+    function topsort() {
+        setSorted([]);
+        var edges = []; // Create edges array
+        for(var key in relations){
+            for(let i = 0; i < relations[key].length; i++){
+                edges.push([key, relations[key][i]]);
+            }
+        }
+
+        var nodes = {}, // hash: stringified id of the node => { id: id, afters: lisf of ids }
+            sorted = [], // sorted list of IDs ( returned value )
+            visited = {}; // hash: id of already visited node => true
+
+        var Node = function (id) {
+            this.id = id;
+            this.afters = [];
+        }
+
+        // 1. build data structures
+        edges.forEach(function (v) {
+            var from = v[0], to = v[1];
+            if (!nodes[from]) nodes[from] = new Node(from);
+            if (!nodes[to]) nodes[to] = new Node(to);
+            nodes[from].afters.push(to);
+        });
+
+        // 2. topological sort
+        Object.keys(nodes).forEach(function visit(idstr, ancestors) {
+            var node = nodes[idstr],
+                id = node.id;
+
+            // if already exists, do nothing
+            if (visited[idstr]) return;
+
+            if (!Array.isArray(ancestors)) ancestors = [];
+
+            ancestors.push(id);
+
+            visited[idstr] = true;
+
+            node.afters.forEach(function (afterID) {
+                if (ancestors.indexOf(afterID) >= 0)  // if already in ancestors, a closed chain exists.
+                    throw new Error('closed chain : ' + afterID + ' is in ' + id);
+
+                visit(afterID.toString(), ancestors.map(function (v) { return v })); // recursive call
+            });
+
+            sorted.unshift(id);
+        });
+
+        setSorted(sorted.map((prev)=> {
+            return <div>{prev}</div>
+        }))
+        setDisplayResult(true);
     }
+
+
 
     return (
         <div className="general-wrapper">
             {openDialog ? <ConnectDialog closeDialog={openConnectDialog} connectNodes={connectNodes} nodes={nodes} updateNodes={setNodes} /> : ""}
-            <Sidebar clear_nodes={clearNodes} new_node={addNode} openConnectDialog={openConnectDialog} />
+            <Sidebar clear_nodes={clearNodes} new_node={addNode} openConnectDialog={openConnectDialog} topsort={topsort} />
             <Main nodes={nodes} clearNodes={clearNodes} addNode={addNode} />
-            <div id="debug" className="debug">
-                <p>
-                    {JSON.stringify(relations)};
-                </p>
-                <button onClick={prepopulateGraph}>Pre-populate graph</button>
-            </div>
+            {displayResult ?  <div className="result">
+                <h2>Results:</h2>
+                {sorted}
+            </div> : ""}
         </div>
     );
 }
