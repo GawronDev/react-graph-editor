@@ -18,8 +18,12 @@ function resetAlphabet() {
 // Relations - a graph stored as adjency list
 var relations = {};
 
+// Keydown bool to prevent holding keys
+var key_pressed = false;
+
 
 export default function App() {
+    console.log("App rerendered");
     const [displayResult, setDisplayResult] = useState(false);
     const [openDialog, setOpenDialog] = useState(false);
     const [nodes, setNodes] = useState([]);
@@ -39,10 +43,11 @@ export default function App() {
         setOpenDialog(prev => !prev);
     }
 
+    // Connect nodes function
     function connectNodes(parent, child) {
         for (var key in relations) {
             console.log(key);
-            if (key == parent) {
+            if (key === parent) {
                 console.log("1");
 
                 if (relations[key].includes(child)) {
@@ -66,15 +71,40 @@ export default function App() {
         }
     }
 
+    /*
+
+    BUG: OpenDialog appers to be true even if it is false
+
+    */
+
+    useEffect(()=>{
+        console.log("OpenDialog status", openDialog);
+    }, [openDialog])
+
+    // Listen for key presses to perform certain actions
+    document.addEventListener("keydown", (event) => {
+        if (event.isComposing || event.keyCode === 229) {
+          return;
+        }
+        if(openDialog && event.keyCode === 27 && !key_pressed){
+            key_pressed = true;
+            console.log("Closing dialog");
+            setOpenDialog(false);
+            return;
+        } 
+      });
     
+    document.addEventListener("keyup", (e)=>{
+        key_pressed = false;
+    })    
 
     // Add new node
     function addNode() {
         setNodes((prev) => {
+            var id = nanoid();
             if (alphabet.length > 0) {
                 var name = alphabet[0];
                 alphabet.shift();
-                var id = nanoid();
                 relations[name] = [];
                 return [
                     ...prev,
@@ -82,7 +112,6 @@ export default function App() {
                 ]
             } else {
                 nodeNum++;
-                var id = nanoid();
                 relations[nodeNum] = [];
                 return [
                     ...prev,
@@ -145,18 +174,23 @@ export default function App() {
         setSorted(sorted.map((prev)=> {
             return <div>{prev}</div>
         }))
-        setDisplayResult(true);
+
+        if(sorted.length > 0){
+            setDisplayResult(true);
+        } else {
+            window.alert("Sorting failed");
+        }
     }
 
 
 
     return (
         <div className="general-wrapper">
-            {openDialog ? <ConnectDialog closeDialog={openConnectDialog} connectNodes={connectNodes} nodes={nodes} updateNodes={setNodes} /> : ""}
+            {openDialog ? <ConnectDialog closeDialog={openConnectDialog} connectNodes={connectNodes} nodes={nodes} updateNodes={setNodes} /> : ''}
             <Sidebar clear_nodes={clearNodes} new_node={addNode} openConnectDialog={openConnectDialog} topsort={topsort} />
             <Main nodes={nodes} clearNodes={clearNodes} addNode={addNode} />
             {displayResult ?  <div className="result">
-                <h2>Results:</h2>
+                <h2>Topological sort results:</h2>
                 {sorted}
             </div> : ""}
         </div>

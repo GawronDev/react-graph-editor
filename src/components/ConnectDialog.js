@@ -9,7 +9,7 @@ export default function ConnectDialog(props) {
     const [options, setOptions] = useState([]);
 
     function handleChange(event) {
-        if(event.target.name == "parent"){
+        if(event.target.name === "parent"){
             const newFormData = {...formData, "parent": event.target.value};
             setFormData(newFormData);
         } else {
@@ -19,7 +19,8 @@ export default function ConnectDialog(props) {
     }
 
     function submitFormData(){
-        if(formData.parent == formData.child){
+        if(formData.parent === formData.child){
+            window.alert("Error, cant connect node to it self");
             console.log("Error, cant connect node to it self");
         } else{
             props.connectNodes(formData.parent, formData.child);
@@ -28,9 +29,10 @@ export default function ConnectDialog(props) {
 
     useEffect(() => {
         setOptions(props.nodes.map((data) => {
-            if(data.props.id != "arrow"){
-                return <option value={data.props.name} data-value={data.props.name}>{data.props.name}</option>
+            if(data.props.id !== "arrow"){
+                return <option key={data.props.name} value={data.props.name} data-value={data.props.name}>{data.props.name}</option>
             }
+            return null;
         }))
     }, [props.nodes])
 
