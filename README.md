@@ -1,6 +1,6 @@
-# COMPLEX GRAPH EDITOR BUILD IN REACTJS
+# GRAPH EDITOR BUILD IN REACTJS
 
-This a project that I'm currently working on. It is a web-based graph editor that allows the creation of nodes, connections, changing names and colors, sorting, creating trees, binary structures etc. It utilizes Firebase as backend where it stores the graphs that the user created to be than avialable on other devices for further editing.
+Web based graph editor. 
 
 ## Screenshots
 
